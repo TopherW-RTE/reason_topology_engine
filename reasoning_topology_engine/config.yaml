@@ -1,0 +1,173 @@
+# ============================================================
+# CONCEPT SCORER — Standalone
+# Configuration File
+# ============================================================
+# This is the concept scorer standalone — the Python-based
+# approximation scorer (evaluator.py) extracted from the
+# hybrid PoC. The 6-gate JAX Fractal Engine is not present
+# in this build; scoring always runs through evaluator.py.
+#
+# To change a setting: edit the value to the right of the colon.
+# To disable a slot: set provider to 'disabled'
+# ============================================================
+
+
+# ------------------------------------------------------------
+# PROJECT IDENTITY
+# ------------------------------------------------------------
+project:
+  name: "Concept Scorer"
+  version: "0.2.0"
+  log_level: "DEBUG"          # Options: DEBUG, INFO, WARNING, ERROR
+  log_to_file: true           # true = save logs to /logs folder
+                              # false = print to terminal only
+
+
+# ------------------------------------------------------------
+# LLM SLOTS
+# Each slot is one "witness" in the parallel reasoning process.
+#
+# HOW TO CONFIGURE:
+#   - Add or remove slots freely. You can have 1 slot or 10.
+#   - Slot names can be anything (slot_a, my_model, gpt4, etc.)
+#   - The system will use all non-disabled slots as witnesses.
+#   - Set engine.anchor_model_slot to the name of the slot
+#     that should generate the final anchored response.
+#   - Minimum 1 active (non-disabled, non-manual) slot required.
+#
+# provider options:
+#   ollama   = local model via Ollama (uses system RAM, free)
+#   groq     = Groq cloud API (free tier, needs API key)
+#   cerebras = Cerebras cloud API (free tier, needs API key)
+#   gemini   = Google Gemini API (free tier, needs API key)
+#   openrouter = OpenRouter API (needs API key)
+#   manual   = paste input by hand (for testing, no API needed)
+#   disabled = turn this slot off entirely
+#
+# EXAMPLES — replace or extend the slots below as needed:
+#
+#   my_local_model:
+#     provider: ollama
+#     model: "llama3:8b"
+#     keep_loaded_minutes: 5
+#     temperature: 0.4
+#     max_tokens: 2048
+#
+#   my_cloud_model:
+#     provider: groq
+#     model: "llama-3.1-8b-instant"
+#     keep_loaded_minutes: 0
+#     temperature: 0.4
+#     max_tokens: 2048
+# ------------------------------------------------------------
+llm_slots:
+
+  slot_a:
+    provider: ollama
+    model: "deepseek-r1:8b"
+    keep_loaded_minutes: 0
+    temperature: 0.4
+    max_tokens: 2048
+
+  slot_b:
+    provider: ollama
+    model: "ministral-3:8b"
+    keep_loaded_minutes: 0
+    temperature: 0.4
+    max_tokens: 2048
+
+  slot_c:
+    provider: ollama
+    model: "gemma3:12b"
+    keep_loaded_minutes: 0
+    temperature: 0.4
+    max_tokens: 2048
+
+  # Add more slots here. Example:
+  # slot_d:
+  #   provider: groq
+  #   model: "llama-3.1-8b-instant"
+  #   keep_loaded_minutes: 0
+  #   temperature: 0.4
+  #   max_tokens: 2048
+
+
+# ------------------------------------------------------------
+# CLOUD API KEYS
+# Leave blank if not using cloud providers.
+# ------------------------------------------------------------
+api_keys:
+  groq: ""
+  cerebras: ""
+  gemini: ""
+  openrouter: ""
+
+
+# ------------------------------------------------------------
+# HARDWARE
+# ------------------------------------------------------------
+hardware:
+  llm_device: "cpu"
+  engine_device: "cpu"        # Concept scorer runs entirely on CPU
+  max_ram_gb: 28
+
+
+# ------------------------------------------------------------
+# ENGINE
+# The concept scorer always uses the Python evaluator backend.
+# anchor_model_slot must match one of the slot names defined
+# in llm_slots above (e.g. "slot_a", "slot_b", etc.)
+# ------------------------------------------------------------
+engine:
+  backend: "python"           # Fixed — concept scorer uses evaluator.py
+                              # The 6-gate Fractal Engine is not in this build
+  anchor_model_slot: "slot_a" # Which slot generates the final anchored response
+                              # Must be the name of one of your llm_slots above
+
+
+# ------------------------------------------------------------
+# CELL MANAGER
+# Retained for schema compatibility. Not active in this build.
+# ------------------------------------------------------------
+cell_manager:
+  mode: "dynamic"
+  branching_factor: 3
+  max_cells: 4
+  spawn_threshold: 0.7
+  merge_timeout_seconds: 30
+
+
+# ------------------------------------------------------------
+# META-LEDGER (VECTOR STORE)
+# Where reasoning topologies are stored and retrieved.
+# ------------------------------------------------------------
+ledger:
+  storage_path: "./ledger/topology_store"
+  embedding_model: "all-MiniLM-L6-v2" # about 90 MB download automatically runs.
+  max_entries: 2048
+  similarity_threshold: 0.80
+  versioning: true
+
+
+# ------------------------------------------------------------
+# SCORING — SURPRISE THRESHOLDS
+# Controls how the evaluator classifies reasoning traces.
+# Low surprise = consensus = reinforced into topology
+# High surprise = outlier = flagged or stripped
+# min_consensus_sources: minimum number of LLMs that must agree.
+#   Recommended: set to roughly half your active slot count,
+#   e.g. 2 for 3 slots, 3 for 5 slots, etc.
+# ------------------------------------------------------------
+scoring:
+  low_surprise_threshold: 0.3    # Below this = consensus element
+  high_surprise_threshold: 0.7   # Above this = outlier
+  min_consensus_sources: 2       # Minimum LLMs that must agree
+
+
+# ------------------------------------------------------------
+# TESTING & DEVELOPMENT
+# ------------------------------------------------------------
+dev:
+  manual_input_enabled: true
+  save_raw_traces: true
+  baseline_comparison: false     # No fractal engine to compare against
