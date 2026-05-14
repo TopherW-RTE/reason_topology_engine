@@ -1,10 +1,7 @@
 # Reasoning Topology Engine
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20149576.svg)](https://doi.org/10.5281/zenodo.20149576)
 
-Multi-model consensus reasoning system that scores, synthesizes, and
-persistently accumulates reasoning traces into topology scaffolds — improving
-without retraining. Single-sided engine extracted from a larger hybrid system.
-Apache 2.0.
+Current LLMs treat every inference as a stateless event — the model answers, forgets everything, and starts fresh next time. There's also no systematic way to evaluate reasoning quality (not just final answers), and no mechanism to get smarter over time without retraining. This project attacks both gaps at once:
 
 ## Abstract
 
